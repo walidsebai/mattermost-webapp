@@ -8,8 +8,6 @@ import {FormattedMessage} from 'react-intl';
 import Permissions from 'mattermost-redux/constants/permissions';
 import classNames from 'classnames';
 
-import TeamStore from 'stores/team_store.jsx';
-
 import {filterAndSortTeamsByDisplayName} from 'utils/team_utils.jsx';
 
 import * as Utils from 'utils/utils.jsx';
@@ -21,6 +19,9 @@ import TeamButton from './components/team_button.jsx';
 
 export default class TeamSidebar extends React.Component {
     static propTypes = {
+        teams: PropTypes.arrayOf(Object).isRequired,
+        currentTeamId: PropTypes.string.isRequired,
+        moreTeams: PropTypes.bool.isRequired,
         isOpen: PropTypes.bool.isRequired,
         experimentalPrimaryTeam: PropTypes.string,
         enableTeamCreation: PropTypes.bool.isRequired,
@@ -32,35 +33,19 @@ export default class TeamSidebar extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = this.getStateFromStores();
-    }
-
-    getStateFromStores =() => {
-        const teamMembers = TeamStore.getMyTeamMembers();
-        const currentTeamId = TeamStore.getCurrentId();
-
-        return {
-            teams: TeamStore.getAll(),
-            teamListings: TeamStore.getTeamListings(),
-            teamMembers,
-            currentTeamId,
-            show: teamMembers && teamMembers.length > 1,
+        this.state = {
             isMobile: Utils.isMobile(),
         };
     }
 
     componentDidMount() {
         window.addEventListener('resize', this.handleResize);
-        TeamStore.addChangeListener(this.onChange);
-        TeamStore.addUnreadChangeListener(this.onChange);
         this.props.actions.getTeams(0, 200);
         this.setStyles();
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
-        TeamStore.removeChangeListener(this.onChange);
-        TeamStore.removeUnreadChangeListener(this.onChange);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -75,59 +60,38 @@ export default class TeamSidebar extends React.Component {
                 $('.team-wrapper').perfectScrollbar('update');
             }
         }
-    }
 
-    onChange = () => {
-        this.setState(this.getStateFromStores());
-        this.setStyles();
+        if (this.props.teams !== prevProps.teams) {
+            this.setStyles();
+        }
     }
 
     handleResize = () => {
-        const teamMembers = this.state.teamMembers;
-        this.setState({show: teamMembers && teamMembers.length > 1});
+        this.setState({isMobile: Utils.isMobile()});
         this.setStyles();
     }
 
     setStyles = () => {
         const root = document.querySelector('#root');
 
-        if (this.state.show) {
+        if (this.shouldShow()) {
             root.classList.add('multi-teams');
         } else {
             root.classList.remove('multi-teams');
         }
     }
 
+    shouldShow = () => {
+        return this.props.teams && this.props.teams.length > 1;
+    }
+
     render() {
-        if (!this.state.show) {
+        if (!this.shouldShow()) {
             return null;
         }
 
-        const myTeams = [];
-        const isAlreadyMember = new Map();
-        let moreTeams = false;
-
-        for (const index in this.state.teamMembers) {
-            if (this.state.teamMembers.hasOwnProperty(index)) {
-                const teamMember = this.state.teamMembers[index];
-                if (teamMember.delete_at > 0) {
-                    continue;
-                }
-                const teamId = teamMember.team_id;
-                myTeams.push(Object.assign({
-                    unread: teamMember.msg_count > 0,
-                    mentions: teamMember.mention_count,
-                }, this.state.teams[teamId]));
-                isAlreadyMember[teamId] = true;
-            }
-        }
-
-        for (const id in this.state.teamListings) {
-            if (this.state.teamListings.hasOwnProperty(id) && !isAlreadyMember[id]) {
-                moreTeams = true;
-                break;
-            }
-        }
+        const myTeams = this.props.teams;
+        const moreTeams = this.props.moreTeams;
 
         const teams = filterAndSortTeamsByDisplayName(myTeams).
             map((team) => {
@@ -136,7 +100,7 @@ export default class TeamSidebar extends React.Component {
                         key={'switch_team_' + team.name}
                         url={`/${team.name}`}
                         tip={team.display_name}
-                        active={team.id === this.state.currentTeamId}
+                        active={team.id === this.props.currentTeamId}
                         isMobile={this.state.isMobile}
                         displayName={team.display_name}
                         unread={team.unread}

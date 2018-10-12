@@ -5,10 +5,13 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import {getTeams} from 'mattermost-redux/actions/teams';
 import {withRouter} from 'react-router-dom';
+
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
+import {getMyTeams, getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 
 import {getIsLhsOpen} from 'selectors/lhs';
 
+import {moreTeamsToJoin} from './selectors';
 import TeamSidebar from './team_sidebar_controller.jsx';
 
 function mapStateToProps(state) {
@@ -18,9 +21,12 @@ function mapStateToProps(state) {
     const enableTeamCreation = config.EnableTeamCreation === 'true';
 
     return {
+        currentTeamId: getCurrentTeamId(state),
         isOpen: getIsLhsOpen(state),
         experimentalPrimaryTeam,
         enableTeamCreation,
+        teams: getMyTeams(state),
+        moreTeams: moreTeamsToJoin(state),
     };
 }
 
