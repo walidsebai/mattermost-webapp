@@ -2,7 +2,7 @@
 // See LICENSE.txt for license information.
 
 import * as ChannelActions from 'mattermost-redux/actions/channels';
-import {deletePreferences, savePreferences} from 'mattermost-redux/actions/preferences';
+import {savePreferences} from 'mattermost-redux/actions/preferences';
 import {Client4} from 'mattermost-redux/client';
 import {getMyChannelMemberships} from 'mattermost-redux/selectors/entities/common';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
@@ -98,7 +98,7 @@ export function executeCommand(message, args, success, error) {
             const currentUserId = UserStore.getCurrentId();
             savePreferences(currentUserId, [{category, name, user_id: currentUserId, value: 'false'}])(dispatch, getState);
             if (ChannelUtils.isFavoriteChannel(channel)) {
-                unmarkFavorite(channel.id);
+                ChannelActions.unfavoriteChannel(channel.id);
             }
             browserHistory.push(`${TeamStore.getCurrentTeamRelativeUrl()}/channels/${Constants.DEFAULT_CHANNEL}`);
             return;
@@ -215,25 +215,6 @@ export async function openGroupChannelToUsers(userIds, success, error) {
         browserHistory.push(TeamStore.getCurrentTeamUrl());
         error({id: result.error.server_error_id, ...result.error});
     }
-}
-
-export function markFavorite(channelId) {
-    trackEvent('api', 'api_channels_favorited');
-    const currentUserId = UserStore.getCurrentId();
-    savePreferences(currentUserId, [{user_id: currentUserId, category: Preferences.CATEGORY_FAVORITE_CHANNEL, name: channelId, value: 'true'}])(dispatch, getState);
-}
-
-export function unmarkFavorite(channelId) {
-    trackEvent('api', 'api_channels_unfavorited');
-    const currentUserId = UserStore.getCurrentId();
-
-    const pref = {
-        user_id: currentUserId,
-        category: Preferences.CATEGORY_FAVORITE_CHANNEL,
-        name: channelId,
-    };
-
-    deletePreferences(currentUserId, [pref])(dispatch, getState);
 }
 
 export async function loadChannelsForCurrentUser() {
@@ -364,7 +345,7 @@ export async function leaveChannel(channelId, success) {
 
     await ChannelActions.leaveChannel(channelId)(dispatch, getState);
     if (ChannelUtils.isFavoriteChannelId(channelId)) {
-        unmarkFavorite(channelId);
+        ChannelActions.unfavoriteChannel(channelId);
     }
     if (success) {
         success();

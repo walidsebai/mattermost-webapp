@@ -56,20 +56,22 @@ import NavbarInfoButton from './navbar_info_button';
 
 export default class Navbar extends React.Component {
     static propTypes = {
-        teamDisplayName: PropTypes.string,
-        isPinnedPosts: PropTypes.bool,
-        enableWebrtc: PropTypes.bool.isRequired,
-        isReadOnly: PropTypes.bool,
         actions: PropTypes.shape({
-            updateRhsState: PropTypes.func,
-            showPinnedPosts: PropTypes.func,
-            toggleLhs: PropTypes.func.isRequired,
             closeLhs: PropTypes.func.isRequired,
             closeRhs: PropTypes.func.isRequired,
-            toggleRhsMenu: PropTypes.func.isRequired,
             closeRhsMenu: PropTypes.func.isRequired,
+            markFavorite: PropTypes.func.isRequired,
+            showPinnedPosts: PropTypes.func,
+            toggleLhs: PropTypes.func.isRequired,
+            toggleRhsMenu: PropTypes.func.isRequired,
+            unmarkFavorite: PropTypes.func.isRequired,
             updateChannelNotifyProps: PropTypes.func.isRequired,
-        }),
+            updateRhsState: PropTypes.func.isRequired,
+        }).isRequired,
+        enableWebrtc: PropTypes.bool.isRequired,
+        isPinnedPosts: PropTypes.bool,
+        isReadOnly: PropTypes.bool,
+        teamDisplayName: PropTypes.string,
     };
 
     static defaultProps = {
@@ -263,12 +265,13 @@ export default class Navbar extends React.Component {
     }
 
     toggleFavorite = (e) => {
+        const {markFavorite, unmarkFavorite} = this.props.actions;
         e.preventDefault();
 
         if (this.state.isFavorite) {
-            ChannelActions.unmarkFavorite(this.state.channel.id);
+            unmarkFavorite(this.state.channel.id);
         } else {
-            ChannelActions.markFavorite(this.state.channel.id);
+            markFavorite(this.state.channel.id);
         }
     };
 
