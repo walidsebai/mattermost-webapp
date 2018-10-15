@@ -12,7 +12,6 @@ import {isChannelMuted} from 'mattermost-redux/utils/channel_utils';
 
 import EditChannelHeaderModal from 'components/edit_channel_header_modal';
 import EditChannelPurposeModal from 'components/edit_channel_purpose_modal';
-import * as ChannelActions from 'actions/channel_actions.jsx';
 import * as GlobalActions from 'actions/global_actions.jsx';
 import * as WebrtcActions from 'actions/webrtc_actions.jsx';
 import ChannelStore from 'stores/channel_store.jsx';
@@ -21,6 +20,7 @@ import PreferenceStore from 'stores/preference_store.jsx';
 import TeamStore from 'stores/team_store.jsx';
 import UserStore from 'stores/user_store.jsx';
 import WebrtcStore from 'stores/webrtc_store.jsx';
+import {browserHistory} from 'utils/browser_history.jsx';
 import * as ChannelUtils from 'utils/channel_utils.jsx';
 import {
     ActionTypes,
@@ -60,6 +60,7 @@ export default class Navbar extends React.Component {
             closeLhs: PropTypes.func.isRequired,
             closeRhs: PropTypes.func.isRequired,
             closeRhsMenu: PropTypes.func.isRequired,
+            leaveChannel: PropTypes.func.isRequired,
             markFavorite: PropTypes.func.isRequired,
             showPinnedPosts: PropTypes.func,
             toggleLhs: PropTypes.func.isRequired,
@@ -147,10 +148,15 @@ export default class Navbar extends React.Component {
     }
 
     handleLeave = () => {
+        const {actions} = this.props;
         if (this.state.channel.type === Constants.PRIVATE_CHANNEL) {
             GlobalActions.showLeavePrivateChannelModal(this.state.channel);
         } else {
-            ChannelActions.leaveChannel(this.state.channel.id);
+            actions.leaveChannel(this.state.channel.id).then((result) => {
+                if (result.data.defaultChannelUrl) {
+                    browserHistory.push(result.data.defaultChannelUrl);
+                }
+            });
         }
     }
 

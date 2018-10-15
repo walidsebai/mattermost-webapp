@@ -8,6 +8,7 @@ import {updateChannelNotifyProps, favoriteChannel, unfavoriteChannel} from 'matt
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 import {isCurrentChannelReadOnly} from 'mattermost-redux/selectors/entities/channels';
 
+import {leaveChannel} from 'actions/views/channel';
 import {
     closeRightHandSide as closeRhs,
     updateRhsState,
@@ -40,6 +41,7 @@ function mapDispatchToProps(dispatch) {
             closeLhs,
             closeRhs,
             closeRhsMenu,
+            leaveChannel,
             markFavorite: favoriteChannel,
             showPinnedPosts,
             toggleLhs,
