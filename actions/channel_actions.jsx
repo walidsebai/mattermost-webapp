@@ -96,9 +96,9 @@ export function executeCommand(message, args, success, error) {
                 category = Constants.Preferences.CATEGORY_GROUP_CHANNEL_SHOW;
             }
             const currentUserId = UserStore.getCurrentId();
-            savePreferences(currentUserId, [{category, name, user_id: currentUserId, value: 'false'}])(dispatch, getState);
+            dispatch(savePreferences(currentUserId, [{category, name, user_id: currentUserId, value: 'false'}]));
             if (ChannelUtils.isFavoriteChannel(channel)) {
-                ChannelActions.unfavoriteChannel(channel.id);
+                dispatch(ChannelActions.unfavoriteChannel(channel.id));
             }
             browserHistory.push(`${TeamStore.getCurrentTeamRelativeUrl()}/channels/${Constants.DEFAULT_CHANNEL}`);
             return;
@@ -343,9 +343,9 @@ export async function leaveChannel(channelId, success) {
     const townsquare = ChannelStore.getByName('town-square');
     browserHistory.push(TeamStore.getCurrentTeamRelativeUrl() + '/channels/' + townsquare.name);
 
-    await ChannelActions.leaveChannel(channelId)(dispatch, getState);
+    await dispatch(ChannelActions.leaveChannel(channelId));
     if (ChannelUtils.isFavoriteChannelId(channelId)) {
-        ChannelActions.unfavoriteChannel(channelId);
+        dispatch(ChannelActions.unfavoriteChannel(channelId));
     }
     if (success) {
         success();
