@@ -3,14 +3,18 @@
 
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
+
 import {getTeamStats} from 'mattermost-redux/actions/teams';
 import {getProfilesNotInChannel} from 'mattermost-redux/actions/users';
+
+import {addUsersToChannel} from 'actions/views/channel';
 
 import ChannelInviteModal from './channel_invite_modal.jsx';
 
 function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
+            addUsersToChannel,
             getProfilesNotInChannel,
             getTeamStats,
         }, dispatch),

@@ -9,7 +9,6 @@ import {searchProfilesNotInCurrentChannel} from 'mattermost-redux/selectors/enti
 import {Client4} from 'mattermost-redux/client';
 
 import {searchUsers} from 'actions/user_actions.jsx';
-import {addUserToChannel} from 'actions/channel_actions.jsx';
 import ChannelStore from 'stores/channel_store.jsx';
 import store from 'stores/redux_store.jsx';
 import TeamStore from 'stores/team_store.jsx';
@@ -27,10 +26,11 @@ export default class ChannelInviteModal extends React.Component {
         onHide: PropTypes.func.isRequired,
         channel: PropTypes.object.isRequired,
         actions: PropTypes.shape({
+            addUsersToChannel: PropTypes.func.isRequired,
             getProfilesNotInChannel: PropTypes.func.isRequired,
             getTeamStats: PropTypes.func.isRequired,
         }).isRequired,
-    }
+    };
 
     constructor(props) {
         super(props);
@@ -59,7 +59,7 @@ export default class ChannelInviteModal extends React.Component {
         }
 
         this.setState({values});
-    }
+    };
 
     componentDidMount() {
         TeamStore.addStatsChangeListener(this.onChange);
@@ -95,18 +95,18 @@ export default class ChannelInviteModal extends React.Component {
             users,
             total: teamStats.active_member_count - channelStats.member_count,
         });
-    }
+    };
 
     onStatusChange = () => {
         // Initiate a render to pick up on new statuses
         this.setState({
             statusChange: !this.state.statusChange,
         });
-    }
+    };
 
     onHide = () => {
         this.setState({show: false});
-    }
+    };
 
     handleInviteError = (err) => {
         if (err) {
@@ -114,23 +114,18 @@ export default class ChannelInviteModal extends React.Component {
                 saving: false,
                 inviteError: err.message,
             });
-        } else {
-            this.setState({
-                saving: false,
-                inviteError: null,
-            });
         }
-    }
+    };
 
     handleDelete = (values) => {
         this.setState({values});
-    }
+    };
 
     setUsersLoadingState = (loadingState) => {
         this.setState({
             loadingUsers: loadingState,
         });
-    }
+    };
 
     handlePageChange = (page, prevPage) => {
         if (page > prevPage) {
@@ -139,9 +134,10 @@ export default class ChannelInviteModal extends React.Component {
                 this.setUsersLoadingState(false);
             });
         }
-    }
+    };
 
     handleSubmit = (e) => {
+        const {actions, channel} = this.props;
         if (e) {
             e.preventDefault();
         }
@@ -153,21 +149,18 @@ export default class ChannelInviteModal extends React.Component {
 
         this.setState({saving: true});
 
-        userIds.forEach((userId) => {
-            addUserToChannel(
-                this.props.channel.id,
-                userId,
-                () => {
-                    this.handleInviteError(null);
-                },
-                (err) => {
-                    this.handleInviteError(err);
-                }
-            );
+        actions.addUsersToChannel(channel.id, userIds).then((result) => {
+            if (result.error) {
+                this.handleInviteError(result.error);
+            } else {
+                this.setState({
+                    saving: false,
+                    inviteError: null,
+                });
+                this.onHide();
+            }
         });
-
-        this.onHide();
-    }
+    };
 
     search = (term) => {
         clearTimeout(this.searchTimeoutId);
@@ -187,7 +180,7 @@ export default class ChannelInviteModal extends React.Component {
             },
             Constants.SEARCH_TIMEOUT_MILLISECONDS
         );
-    }
+    };
 
     renderOption = (option, isSelected, onAdd) => {
         var rowSelected = '';
@@ -222,11 +215,11 @@ export default class ChannelInviteModal extends React.Component {
                 </div>
             </div>
         );
-    }
+    };
 
     renderValue = (user) => {
         return user.username;
-    }
+    };
 
     render() {
         let inviteError = null;
