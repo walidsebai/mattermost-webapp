@@ -14,6 +14,7 @@ import * as GlobalActions from 'actions/global_actions.jsx';
 import TeamStore from 'stores/team_store.jsx';
 import WebrtcStore from 'stores/webrtc_store.jsx';
 import {Constants, WebrtcActionTypes} from 'utils/constants.jsx';
+import {cmdOrCtrlPressed, isKeyPressed} from 'utils/utils';
 import {useSafeUrl} from 'utils/url';
 import * as UserAgent from 'utils/user_agent.jsx';
 import AboutBuildModal from 'components/about_build_modal';
@@ -202,6 +203,7 @@ export default class SidebarHeaderDropdown extends React.Component {
 
     componentDidMount() {
         TeamStore.addChangeListener(this.onTeamChange);
+        document.addEventListener('keydown', this.handleKeyDown);
     }
 
     onTeamChange() {
@@ -214,6 +216,13 @@ export default class SidebarHeaderDropdown extends React.Component {
     componentWillUnmount() {
         $(ReactDOM.findDOMNode(this.refs.dropdown)).off('hide.bs.dropdown');
         TeamStore.removeChangeListener(this.onTeamChange);
+        document.removeEventListener('keydown', this.handleKeyDown);
+    }
+
+    handleKeyDown = (e) => {
+        if (cmdOrCtrlPressed(e) && e.shiftKey && isKeyPressed(e, Constants.KeyCodes.A)) {
+            GlobalActions.showAccountSettingsModal();
+        }
     }
 
     renderCustomEmojiLink() {
